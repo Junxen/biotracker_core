@@ -170,9 +170,9 @@ void VideoControllWidget::on_PositionChanged(int position) {
 //     controller->takeScreenshot();
 // }
 
-void VideoControllWidget::on_comboBoxSelectedView_currentTextChanged(const QString& arg1) {
+//void VideoControllWidget::on_comboBoxSelectedView_currentTextChanged(const QString& arg1) {
 	/*QString name = arg1;*/
-}
+//}
 
 void VideoControllWidget::on_sld_video_sliderReleased() {
 }
