@@ -13,6 +13,10 @@ VSSourceGroups(${CMAKE_CURRENT_LIST_DIR})
 add_definitions(-DBIORACKER_GIT_HASH="${GIT_HASH}")
 add_definitions(-DBIOTRACKER_GIT_TAG="${GIT_TAG}")
 
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+endif()
+
 set(target BioTracker)
 add_executable (${target})
 set_target_properties(${target} PROPERTIES OUTPUT_NAME BioTracker)
@@ -29,7 +33,7 @@ find_package(Boost REQUIRED system filesystem chrono thread timer program_option
 target_include_directories(${target} PUBLIC ${Boost_INCLUDE_DIRS}) 
 target_link_libraries(${target} ${Boost_LIBRARIES})
 
-option(WITH_PYLON5 "Support Pylon 5 cameras" OFF)
+option(WITH_PYLON5 "Support Pylon 5 cameras" $ENV{WITH_PYLON5})
 if(WITH_PYLON5)
     find_package(Pylon5)
     if(Pylon5_FOUND)
@@ -67,11 +71,11 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
         include(InstallRequiredSystemLibraries)
     endif()
 
-    include(WinDeployQt5)
-    deploy_qt5(${target} DESTINATION .)
-	
-	#boost_program_options;boost_filesystem;bt_interfaces;
-	#calib3d;videoio;imgcodecs;imgproc;core;
+    if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
+        include(WinDeployQt5)
+        deploy_qt5(${target} DESTINATION .)
+    endif()
+
     set(INSTALL_CUDA_COMPONENTS "" CACHE STRING "CUDA components to install")
     locate_cuda(shared_libraries COMPONENTS ${INSTALL_CUDA_COMPONENTS})
 
@@ -186,6 +190,13 @@ PRIVATE
     "View/Utility/SwitchButton.cpp"
     "View/Utility/Tracer.cpp"
 )
+
+if(WITH_PYLON5)
+    target_sources(${target}
+    PRIVATE
+        "util/camera/pylon.cpp"
+    )
+endif()
 
 
 

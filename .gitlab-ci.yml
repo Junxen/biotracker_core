@@ -52,7 +52,7 @@ stages:
       - build
     expire_in: 1 day
   script:
-    - cmake -Bbuild "-H." -DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE" -G Ninja -DPACKAGE_WINDOWS_MSI=ON -DINSTALL_REQUIRED_SYSTEM_LIBRARIES=ON -DINSTALL_SHARED_LIBRARIES='flang;flangrti;libomp;zlib1;tiff;tiffxx;jpeg62;libpng16;lzma;openblas' -DINSTALL_OPENCV_COMPONENTS='core;calib3d;features2d;flann;highgui;imgcodecs;imgproc;ml;objdetect;photo;shape;stitching;superres;video;videoio;videostab' -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_DIR/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET="$env:VCPKG_TRIPLET" -DCMAKE_SUPPRESS_REGENERATION=ON -DCMAKE_SKIP_PACKAGE_ALL_DEPENDENCY=ON -DCPACK_PACKAGE_DIRECTORY="${env:PACKAGE_DIR}"
+    - cmake -Bbuild "-H." -DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE" -G Ninja -DPACKAGE_WINDOWS_MSI=ON -DINSTALL_REQUIRED_SYSTEM_LIBRARIES=ON -DINSTALL_SHARED_LIBRARIES='flang;flangrti;libomp;zlib1;tiff;tiffxx;jpeg62;libpng16;lzma;openblas' -DINSTALL_OPENCV_COMPONENTS='core;calib3d;features2d;flann;highgui;imgcodecs;imgproc;ml;objdetect;photo;shape;stitching;superres;video;videoio;videostab;ffmpeg' -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_DIR/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET="$env:VCPKG_TRIPLET" -DCMAKE_SUPPRESS_REGENERATION=ON -DCMAKE_SKIP_PACKAGE_ALL_DEPENDENCY=ON -DCPACK_PACKAGE_DIRECTORY="${env:PACKAGE_DIR}"
     - ninja -C build
 
 build ubuntu-18.04:
@@ -72,6 +72,23 @@ build windows:
   extends: .build windows
   variables:
     <<: [ *release ]
+  before_script:
+    - . $Profile
+    - *msvc15_9
+    - GitLab-Fetch-Artifacts bioroboticslab%2Fbiotracker%2Finterfaces master package%20windows
+    - CMake-Integrate-Package biotracker-interfaces
+    - GitLab-Fetch-Artifacts bioroboticslab%2Fbiotracker%2Futility master package%20windows
+    - CMake-Integrate-Package biotracker-utility
+    - GitLab-Fetch-Artifacts bioroboticslab%2Fbiotracker%2Fbehavior_loader master package%20windows
+    - CMake-Integrate-Package robofish-behavior_loader
+    - $env:PACKAGE_DIR = ("${env:TMP}/pkg" -Replace "\\","/")
+    - $env:PATH += ";${env:VCPKG_INSTALL_DIR}/bin"
+    - $env:PATH += ";$(resolve-path vendor/biotracker-interfaces/bin)"
+
+build windows[pylon5]:
+  extends: .build windows
+  variables:
+    <<: [ *release, *pylon5 ]
   before_script:
     - . $Profile
     - *msvc15_9
@@ -123,6 +140,15 @@ package windows:
   extends: .package windows
   dependencies:
     - build windows
+  before_script:
+    - $env:PACKAGE_DIR = ("${env:TMP}/pkg" -Replace "\\","/")
+    - $env:PATH += ";${env:VCPKG_INSTALL_DIR}/bin"
+    - $env:PATH += ";$(resolve-path vendor/biotracker-interfaces/bin)"
+
+package windows[pylon5]:
+  extends: .package windows
+  dependencies:
+    - build windows[pylon5]
   before_script:
     - $env:PACKAGE_DIR = ("${env:TMP}/pkg" -Replace "\\","/")
     - $env:PATH += ";${env:VCPKG_INSTALL_DIR}/bin"

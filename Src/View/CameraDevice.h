@@ -7,6 +7,7 @@
 #include "QCameraViewfinder"
 #include "QPointer"
 #include "util/types.h"
+#include "util/camera/base.h"
 #include <opencv2/opencv.hpp>
 
 namespace Ui {
@@ -24,7 +25,7 @@ public:
 private Q_SLOTS:
     void on_buttonBox_accepted();
 
-	void on_pushButton_clicked();
+	void on_showPreviewButton_clicked();
 
     void on_comboBox_currentIndexChanged(int index);
 
